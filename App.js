@@ -1,58 +1,77 @@
-import { useState } from "react";
-import {
-	StyleSheet,
-	Text,
-	View,
-	TextInput,
-	Button,
-	Pressable,
-} from "react-native";
+import { StyleSheet, Text, View, FlatList, Pressable } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import AddItem from "./components/AddItem";
+import Item from "./components/Item";
+import CustomModal from "./components/CustomModal";
 
+const initialState = [
+	{ id: 1, text: "banana" },
+	{ id: 2, text: "pear" },
+	{ id: 3, text: "apple" },
+];
 export default function App() {
-	const initialState = [
-		{ id: 1, text: "banana" },
-		{ id: 2, text: "pear" },
-		{ id: 3, text: "apple" },
-	];
-
+	const [itemSelected, setItemSelected] = useState({});
+	const [modalVisible, setModalVisible] = useState(false);
 	const [text, setText] = useState("");
 	const [list, setList] = useState(initialState);
 
+	const handleDelete = (itemId) => {
+		const newList = list.filter((item) => item.id !== itemId);
+		setList(newList);
+		setModalVisible(false);
+	};
 	const addItem = () => {
 		list.push({ id: Math.random, text: text });
 		setList(list);
 		setText("");
 		console.log(list);
 	};
-
+	const clearList = () => {
+		setList([]);
+		setModalVisible(false);
+	};
 	return (
 		<View style={styles.container}>
+			<CustomModal
+				visible={modalVisible}
+				onDelete={handleDelete.bind(this, itemSelected.id)}
+				item={itemSelected}
+				setModalVisible={setModalVisible}
+				clearList={clearList}
+			/>
 			<View style={styles.banner}>
-				<FontAwesome5 name="shopping-cart" size={40} color="white" />
-				<Text style={styles.title}>My shopping list </Text>
+				<FontAwesome5 name="clipboard-list" size={24} color="white" />
+				<Text style={styles.title}>Shopping list</Text>
 			</View>
-			<Text />
-			<View style={styles.inputContainer}>
-				<TextInput
-					placeholder="Enter a product"
-					style={styles.input}
-					value={text}
-					onChangeText={(value) => setText(value)}
-				/>
-				<Pressable style={styles.button} onPress={addItem}>
-					<Ionicons name="add-circle-outline" size={40} color="white" />
-				</Pressable>
-			</View>
-			<View style={styles.listContainer}>
-				{list.map((elem) => (
-					<Text key={elem.id} style={styles.itemText}>
-						-{elem.text}
-					</Text>
-				))}
-			</View>
-			<View></View>
+			<AddItem text={text} addItem={addItem} setText={setText} />
+			{list.length > 0 ? (
+				<View style={styles.listContainer}>
+					<View>
+						<FlatList
+							data={list}
+							renderItem={({ item }) => (
+								<Item
+									text={item.text}
+									item={item}
+									onDelete={handleDelete}
+									setModalVisible={setModalVisible}
+								/>
+							)}
+							keyExtractor={(item) => item.id}
+						></FlatList>
+					</View>
+					<Pressable
+						onPress={() => setModalVisible(true)}
+						style={styles.delete}
+					>
+						<Text style={styles.deleteText}>Delete all items</Text>
+					</Pressable>
+				</View>
+			) : (
+				<p>No elements added</p>
+			)}
 		</View>
 	);
 }
@@ -61,7 +80,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		alignItems: "center",
-		// justifyContent: 'center',
 		height: "100%",
 		borderRadius: 20,
 		paddingBottom: 20,
@@ -108,9 +126,24 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		alignContent: "flex-start",
 	},
+	itemsContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
 	itemText: {
 		fontSize: 20,
 		marginLeft: 0,
 		padding: 0,
+	},
+	delete: {
+		alignItems: "center",
+		marginTop: 40,
+		backgroundColor: "#d00000",
+		borderRadius: 10,
+		padding: 4,
+	},
+	deleteText: {
+		color: "#ffff",
+		margin: "auto",
 	},
 });
